@@ -25,6 +25,10 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ['user']
 
+    def validate(self, attrs):
+        attrs['user'] = self.context['request'].user
+        return attrs
+
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['user'] = UserSerializer(instance.user).data
@@ -40,3 +44,7 @@ class PostSerializer(ModelSerializer):
         response = super().to_representation(instance)
         response['user'] = ProfileSerializer(instance.user.profile).data
         return response
+
+    def validate(self, obj):
+        obj['user'] = self.context['request'].user
+        return obj

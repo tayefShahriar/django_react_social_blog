@@ -10,6 +10,8 @@ from rest_framework.response import Response
 # Create your views here.
 
 class PostView(ModelViewSet):
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TokenAuthentication, ]
     queryset = Post.objects.all().order_by("-id")
     serializer_class = PostSerializer
 
@@ -33,3 +35,34 @@ class RegisterView(views.APIView):
             serializers.save()
             return Response({"error": False, "message": "User successful", "data": serializers.data})
         return Response({"error": True, "message": "A user with that username already exists! Try another username"})
+
+class UserDataUpdate(views.APIView):
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TokenAuthentication, ]
+    def post(self, request):
+        user = request.user
+        data = request.data
+        user_obj = User.objects.get(username=user)
+        # print(user_obj, "$$$$$$$$$$$")
+        user_obj.first_name = data['first_name']
+        user_obj.last_name = data['last_name']
+        user_obj.email = data['email']
+        user_obj.save()
+        return Response({"message": "user data is updated"})
+
+class ProfileUpdate(views.APIView):
+    permission_classes = [IsAuthenticated, ]
+    authentication_classes = [TokenAuthentication, ]
+    def post(self, request):
+        try:
+            user = request.user
+            query = Profile.objects.get(user=user)
+            serializer = ProfileSerializer(query, data=request.data, context={'request': request})
+            serializer.is_valid()
+            serializer.save()
+            respnse_msg = {"error": False, "message": "profile is updated"}
+        except:
+            respnse_msg = {"error": True, "message": "profile is not updated"}
+        return Response(respnse_msg)
+
+
